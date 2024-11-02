@@ -2,7 +2,7 @@ This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next
 
 ## Getting Started
 
-Install depedency and migrate database
+Install dependencies and migrate the database
 
 ```bash
 npm install

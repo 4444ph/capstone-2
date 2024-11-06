@@ -98,3 +98,11 @@ model UserProgress {
   @@unique([userId, chapterId])
   @@index([chapterId])
 }
+
+model ChatMessage {
+  id        Int      @id @default(autoincrement())
+  userId    String   
+  sender    String   
+  message   String
+  timestamp DateTime @default(now())
+}

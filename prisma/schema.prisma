@@ -7,8 +7,8 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL") // Use environment variable for Neon DB connection string
+  provider = "sqlite"
+  url      = "file:./test.db"
 }
 
 model Course {
@@ -118,10 +118,25 @@ model Event {
   allDay Boolean
 }
 
+model ChatSession {
+  id        String       @id @default(cuid())
+  userId    String
+  title     String?
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  messages  ChatMessage[]
+
+  @@index([userId]) // Define an index for the userId field
+}
+
+
+
 model ChatMessage {
-  id        Int      @id @default(autoincrement())
-  userId    String   
-  sender    String   
+  id        String   @id @default(cuid())
+  sender    String
   message   String
-  timestamp DateTime @default(now())
+  sessionId String
+  session   ChatSession @relation(fields: [sessionId], references: [id])
+  userId    String
+  createdAt DateTime @default(now())
 }

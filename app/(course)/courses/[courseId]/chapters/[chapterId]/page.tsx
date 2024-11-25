@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Preview } from "@/components/preview";
 import { CourseProgressButton } from "./_components/course-progress-button";
+import DownloadButton from "./DownloadButton";
 
 interface ChapterIdPageProps {
   params: { courseId: string; chapterId: string };
@@ -37,13 +38,13 @@ const ChapterIdPage = async ({ params }: ChapterIdPageProps) => {
   return (
     <div>
       {userProgress?.isCompleted && (
-        <Banner variant="success" label="You've already completed this chapter!" />
+        <Banner
+          variant="success"
+          label="You've already completed this chapter!"
+        />
       )}
       {isLocked && (
-        <Banner
-          variant="warning"
-          label="chapter currently not available."
-        />
+        <Banner variant="warning" label="chapter currently not available." />
       )}
       <div className="flex flex-col max-w-4xl mx-auto pb-20">
         <div className="p-4">
@@ -61,7 +62,7 @@ const ChapterIdPage = async ({ params }: ChapterIdPageProps) => {
         <div className="p-4 flex flex-col md:flex-row items-center justify-between">
           <h2 className="text-2xl font-semibold mb-2">{chapter.title}</h2>
 
-          <CourseProgressButton 
+          <CourseProgressButton
             chapterId={params.chapterId}
             courseId={params.courseId}
             nextChapterId={nextChapter?.id}
@@ -72,7 +73,9 @@ const ChapterIdPage = async ({ params }: ChapterIdPageProps) => {
         {chapter.description && (
           <div className="p-4">
             <h3 className="text-lg font-semibold mb-2">Description</h3>
-            <div><Preview value={chapter.description}/></div>
+            <div>
+              <Preview value={chapter.description} />
+            </div>
           </div>
         )}
         <Separator />
@@ -87,19 +90,12 @@ const ChapterIdPage = async ({ params }: ChapterIdPageProps) => {
                 >
                   <File className="h-4 w-4 mr-2 flex-shrink-0" />
                   <p className="text-sm line-clamp-1">{attachment.name}</p>
-                  <Button
-                    asChild
-                    variant="ghost"
-                    className="ml-auto"
-                  >
-                    <a
-                      href={attachment.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      download
-                    >
-                      Download
-                    </a>
+                  <Button asChild variant="ghost" className="ml-auto">
+                    <DownloadButton
+                      attachmentId={attachment.id}
+                      filename={attachment.name}
+                      courseId={params.courseId}
+                    />
                   </Button>
                 </div>
               ))}

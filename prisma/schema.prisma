@@ -7,8 +7,8 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL") // Use environment variable for Neon DB connection string
+  provider = "sqlite"
+  url      = "file:./test.db"
 }
 
 model Course {

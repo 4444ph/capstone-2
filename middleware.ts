@@ -1,12 +1,30 @@
-import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
+import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 
-const isPublicRoute = createRouteMatcher(['/sign-in(.*)', '/sign-up(.*)'])
+const isPublicRoute = createRouteMatcher([
+  '/sign-in(.*)',
+  '/sign-up(.*)',
+  '/api/uploadthing(.*)',
+  '/api/check-role(.*)'
+]);
 
 export default clerkMiddleware((auth, request) => {
-  if (!isPublicRoute(request)) {
-    auth().protect()
+  console.log(`Request received for: ${request.url}`);
+  
+  if (isPublicRoute(request)) {
+    console.log('Public route access granted');
+    return;
   }
-})
+
+  try {
+    auth().protect();
+    console.log('Protected route access granted');
+  } catch (error) {
+    console.error('Authentication failed', error);
+
+    // Return a specific response for unauthorized access
+    return new Response('Unauthorized', { status: 401 });
+  }
+});
 
 export const config = {
   matcher: [
@@ -15,4 +33,4 @@ export const config = {
     // Always run for API routes
     '/(api|trpc)(.*)',
   ],
-}
+};

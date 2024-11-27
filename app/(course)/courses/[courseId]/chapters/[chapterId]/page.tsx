@@ -11,17 +11,26 @@ import { CourseProgressButton } from "./_components/course-progress-button";
 import DownloadButton from "./_components/DownloadButton";
 
 interface ChapterIdPageProps {
-  params: { courseId: string; chapterId: string };
+  params: { courseId: string; chapterId: string; };
 }
 
-const ChapterIdPage = async ({ params }: ChapterIdPageProps) => {
+const ChapterIdPage = async ({ 
+  params }:
+  
+  ChapterIdPageProps) => {
   const { userId } = auth();
 
   if (!userId) {
     return redirect("/");
   }
 
-  const { chapter, course, attachments, nextChapter, userProgress } =
+  const { 
+    chapter, 
+    course, 
+    attachments, 
+    nextChapter, 
+    userProgress, 
+    muxData } =
     await getChapter({
       userId,
       chapterId: params.chapterId,
@@ -53,7 +62,7 @@ const ChapterIdPage = async ({ params }: ChapterIdPageProps) => {
             title={chapter.title}
             courseId={params.courseId}
             nextChapterId={nextChapter?.id}
-            playbackId={chapter.videoUrl}
+            playbackId={muxData?.playbackId!}
             isLocked={isLocked}
             completeOnEnd={completeOnEnd}
           />
@@ -66,7 +75,7 @@ const ChapterIdPage = async ({ params }: ChapterIdPageProps) => {
             chapterId={params.chapterId}
             courseId={params.courseId}
             nextChapterId={nextChapter?.id}
-            isCompleted={!!!userProgress?.isCompleted}
+            isCompleted={!!userProgress?.isCompleted}
           />
         </div>
         <Separator />

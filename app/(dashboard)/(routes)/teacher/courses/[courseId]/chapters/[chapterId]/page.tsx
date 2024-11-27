@@ -30,7 +30,7 @@ const ChapterIdPage = async ({
             courseId: params.courseId
         },
         include: {
-            video: true,
+            muxData: true,
         },
     });
 

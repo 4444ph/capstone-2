@@ -2,134 +2,121 @@
 
 import * as z from "zod";
 import axios from "axios";
-import { Button } from "@/components/ui/button";
-import { Pencil, PlusCircle, Video } from "lucide-react";
-import { useState, ChangeEvent } from "react";
+import MuxPlayer from "@mux/mux-player-react";
+import { Pencil, PlusCircle, Video, Trash2 } from "lucide-react";
+import { useState } from "react";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
-import { Chapter } from "@prisma/client";
+import { Chapter, MuxData } from "@prisma/client";
+
+import { Button } from "@/components/ui/button";
+import { FileUpload } from "@/components/file-upload";
 
 interface ChapterVideoFormProps {
-    initialData: Chapter;
-    courseId: string;
-    chapterId: string;
-}
+  initialData: Chapter & { muxData?: MuxData | null };
+  courseId: string;
+  chapterId: string;
+};
 
 const formSchema = z.object({
-    videoUrl: z.string().min(1),
+  videoUrl: z.string().min(1),
 });
 
 export const ChapterVideoForm = ({
-    initialData,
-    courseId,
-    chapterId,
+  initialData,
+  courseId,
+  chapterId,
 }: ChapterVideoFormProps) => {
-    const [isEditing, setIsEditing] = useState(false);
-    const [file, setFile] = useState<File | null>(null);
-    const [isUploading, setIsUploading] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
 
-    const toggleEdit = () => setIsEditing((current) => !current);
+  const toggleEdit = () => setIsEditing((current) => !current);
 
-    const router = useRouter();
-    
-    const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files && e.target.files[0]) {
-            setFile(e.target.files[0]);
-        }
-    };
+  const router = useRouter();
 
-    const onSubmit = async () => {
-        if (!file) {
-            toast.error("Please select a video file");
-            return;
-        }
-
-        setIsUploading(true);
-
-        try {
-            const formData = new FormData();
-            formData.append('videoFile', file);
-
-            const response = await axios.post(`/api/courses/${courseId}/chapters/${chapterId}/video`, formData);
-
-            toast.success("Video uploaded successfully");
-            toggleEdit();
-            router.refresh();
-        } catch (error) {
-            toast.error("Something went wrong while uploading the video");
-        } finally {
-            setIsUploading(false);
-        }
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    try {
+      await axios.patch(`/api/courses/${courseId}/chapters/${chapterId}`, values);
+      toast.success("Chapter updated");
+      toggleEdit();
+      router.refresh();
+    } catch {
+      toast.error("Something went wrong");
     }
+  }
 
-    return (
-        <div className="mt-6 border bg-slate-100 rounded-md p-4">
-            <div className="font-medium flex items-center justify-between">
-                Chapter video
-                <Button onClick={toggleEdit} variant="ghost">
-                    {isEditing && (
-                        <>Cancel</>
-                    )}
-                    {!isEditing && !initialData.videoUrl && (
-                        <>
-                            <PlusCircle className="h-4 w-4 mr-2"/>
-                            Add a video
-                        </>
-                    )}
-                    {!isEditing && initialData.videoUrl && ( 
-                        <>
-                            <Pencil className="h-4 w-4 mr-2" />
-                            Edit video
-                        </>
-                    )}    
-                </Button>
-            </div>
-            {!isEditing && (
-                !initialData.videoUrl ? (
-                    <div className="flex items-center justify-center h-60 bg-slate-200 rounded-md">
-                        <Video className="h-10 w-10 text-slate-500" />
-                    </div>
-                ) : (
-                    <div className="relative aspect-video mt-2">
-                        <video 
-                            src={`/api/courses/${courseId}/chapters/${chapterId}/video`}
-                            controls 
-                            className="w-full h-full"
-                        />
-                    </div>                    
-                )
-            )}
+  const onDelete = async () => {
+    try {
+      await axios.patch(`/api/courses/${courseId}/chapters/${chapterId}`, { videoUrl: null });
+      toast.success("Video deleted");
+      router.refresh();
+    } catch {
+      toast.error("Failed to delete video");
+    }
+  }
+
+  return (
+    <div className="mt-6 border bg-slate-100 rounded-md p-4 dark:bg-gray-800 dark:text-slate-300">
+      <div className="font-medium flex items-center justify-between">
+        Chapter video
+        <div>
+          {initialData.videoUrl && !isEditing && (
+            <Button onClick={onDelete} variant="ghost" className="mr-2">
+              <Trash2 className="h-4 w-4 mr-2" />
+              Delete video
+            </Button>
+          )}
+          <Button onClick={toggleEdit} variant="ghost">
             {isEditing && (
-                <div>
-                    <input
-                        type="file"
-                        onChange={handleFileChange}
-                        accept="video/*"
-                        className="block w-full text-sm text-slate-500
-                            file:mr-4 file:py-2 file:px-4
-                            file:rounded-full file:border-0
-                            file:text-sm file:font-semibold
-                            file:bg-violet-50 file:text-violet-700
-                            hover:file:bg-violet-100
-                        "
-                    />
-                    <Button 
-                        onClick={onSubmit} 
-                        disabled={!file || isUploading}
-                        className="mt-2"
-                    >
-                        {isUploading ? "Uploading..." : `Upload ${file?.name || "video"}`}
-                    </Button>
-                    <div className="text-xs text-muted-foreground mt-4">
-                        Upload chapter video
-                    </div>
-                </div>
+              <>Cancel</>
             )}
-            {initialData.videoUrl && !isEditing && (
-                <div className="text-xs text-muted-foreground mt-2">
-                    Video uploaded successfully. You can preview it above.
-                </div>
+            {!isEditing && !initialData.videoUrl && (
+              <>
+                <PlusCircle className="h-4 w-4 mr-2" />
+                Add a video
+              </>
             )}
+            {!isEditing && initialData.videoUrl && (
+              <>
+                <Pencil className="h-4 w-4 mr-2" />
+                Edit video
+              </>
+            )}
+          </Button>
         </div>
-    )
+      </div>
+      {!isEditing && (
+        !initialData.videoUrl ? (
+          <div className="flex items-center justify-center h-60 bg-slate-200 rounded-md dark:bg-gray-800 dark:text-slate-300">
+            <Video className="h-10 w-10 text-slate-500" />
+          </div>
+        ) : (
+          <div className="relative aspect-video mt-2">
+            <MuxPlayer
+              playbackId={initialData?.muxData?.playbackId || ""}
+            /> 
+          </div>
+        )
+      )}
+      {isEditing && (
+        <div>
+          <FileUpload
+            endpoint="chapterVideo"
+            onChange={(url) => {
+              if (url) {
+                onSubmit({ videoUrl: url });
+              }
+            }}
+          />
+          <div className="text-xs text-muted-foreground mt-4">
+            Upload this chapter&apos;s video
+          </div>
+        </div>
+      )}
+      {initialData.videoUrl && !isEditing && (
+        <div className="text-xs text-muted-foreground mt-2">
+          Videos can take a few minutes to process. Refresh the page if the video does not appear.
+        </div>
+      )}
+    </div>
+  )
 }

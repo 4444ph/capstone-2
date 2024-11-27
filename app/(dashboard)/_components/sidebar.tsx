@@ -6,7 +6,7 @@ export const Sidebar = () => {
         border-r flex flex-col
         overflow-y-auto bg-white shadow-sm">
         
-        <div className="p-6">
+        <div className="p-6 flex flex-col items-center">
             <Logo />
         </div>
             <div className="flex flex-col w-full">

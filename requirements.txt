@@ -13,7 +13,7 @@
 
 #GEMINI_API_KEY="AIzaSyBLtvsmeNzzNqLgAAb-GTj0_FM8xvWSFIY" 
 
-#NEXT_PUBLIC_BASE_URL=http://localhost:300
+#NEXT_PUBLIC_BASE_URL=http://localhost:3000
 
 #  provider = "sqlite" if using local DB
 #  url      = "file:./test.db"

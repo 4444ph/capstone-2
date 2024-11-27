@@ -1,21 +1,20 @@
 import { NextResponse } from "next/server";
 import { checkRole } from "@/utils/roles";
 
-export async function GET(req: Request) {
-  // Add CORS headers
-  const origin = req.headers.get("origin") || "*";
+export async function OPTIONS() {
+  // Handle preflight requests
+  return new Response(null, {
+    status: 204,
+    headers: {
+      "Access-Control-Allow-Origin": "*", // Allow all origins for testing; restrict in production
+      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    },
+  });
+}
 
-  // Allow preflight requests (OPTIONS)
-  if (req.method === "OPTIONS") {
-    return new Response(null, {
-      status: 204,
-      headers: {
-        "Access-Control-Allow-Origin": origin,
-        "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type, Authorization",
-      },
-    });
-  }
+export async function GET(req: Request) {
+  const origin = req.headers.get("origin") || "*";
 
   // Normal request logic
   const isTeacher = await checkRole("teacher");
@@ -24,7 +23,7 @@ export async function GET(req: Request) {
     status: 200,
     headers: {
       "Content-Type": "application/json",
-      "Access-Control-Allow-Origin": origin,
+      "Access-Control-Allow-Origin": origin, // Match the request origin
     },
   });
 }

@@ -1,19 +1,34 @@
-"use client"; // Add this line at the top of the file
+"use client";
 
 import { useEffect, useState } from "react";
-import { redirect } from "next/navigation";
-import { Loader2 } from "lucide-react"; // Assuming you're already using Lucide icons
+import { useRouter } from "next/navigation";
+import { Loader2 } from "lucide-react";
 
 const TeacherLayout = ({ children }: { children: React.ReactNode }) => {
   const [isTeacher, setIsTeacher] = useState<boolean | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
   useEffect(() => {
     const fetchRole = async () => {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/api/check-role`
-      );
-      const data = await response.json();
-      setIsTeacher(data.isTeacher);
+      try {
+        const baseUrl =
+          process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"; // Fallback for local development
+        const response = await fetch(`${baseUrl}/api/check-role`, {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+        });
+
+        if (!response.ok) {
+          throw new Error(`API error: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        setIsTeacher(data.isTeacher);
+      } catch (error) {
+        console.error("Error fetching role:", error);
+        setError("Failed to fetch user role. Please try again.");
+      }
     };
 
     fetchRole();
@@ -30,8 +45,25 @@ const TeacherLayout = ({ children }: { children: React.ReactNode }) => {
     );
   }
 
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-red-100">
+        <div className="flex flex-col items-center text-center space-y-4">
+          <p className="text-red-700 text-lg">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   if (!isTeacher) {
-    return redirect("/"); // Redirect to homepage if not a teacher
+    router.push("/"); // Use router.push for client-side navigation
+    return null; // Prevent rendering until navigation occurs
   }
 
   return <>{children}</>;

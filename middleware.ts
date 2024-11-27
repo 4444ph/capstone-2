@@ -8,12 +8,28 @@ const isPublicRoute = createRouteMatcher([
   '/api/check-role(.*)',
 ]);
 
-export default clerkMiddleware((auth, request) => {
-  if (!isPublicRoute(request)) {
-    auth().protect()
-  }
-})
+export default clerkMiddleware((auth, req) => {
+  const res = NextResponse.next();
 
+  // Add CORS headers for API routes
+  if (req.url.startsWith('/api/')) {
+    res.headers.set('Access-Control-Allow-Origin', '*'); // Adjust origin in production
+    res.headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  }
+
+  // Handle OPTIONS preflight request
+  if (req.method === 'OPTIONS') {
+    return res; // Respond early with CORS headers
+  }
+
+  // Protect non-public routes
+  if (!isPublicRoute(req)) {
+    auth().protect(); // Clerk's built-in protection
+  }
+
+  return res;
+});
 
 export const config = {
   matcher: [
@@ -22,4 +38,4 @@ export const config = {
     // Always run for API routes
     '/(api|trpc)(.*)',
   ],
-}
+};

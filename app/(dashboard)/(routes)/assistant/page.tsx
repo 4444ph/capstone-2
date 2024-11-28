@@ -6,7 +6,7 @@ import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 
-import { Send, Trash2, Plus, Menu, X } from "lucide-react"; // Add icons for the toggle
+import { Send, Trash2, Plus, Menu, X } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -31,7 +31,7 @@ const AssistantPage: React.FC = () => {
   const [chats, setChats] = useState<Chat[]>([]);
   const [currentChatId, setCurrentChatId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [sidebarOpen, setSidebarOpen] = useState(false); // Track sidebar state
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const endOfMessagesRef = useRef<HTMLDivElement | null>(null);
 
   const {
@@ -44,8 +44,33 @@ const AssistantPage: React.FC = () => {
   } = useChat({
     api: "/api/ai",
     body: { userId, chatId: currentChatId },
-    onResponse: () => {
+    onResponse: (response) => {
       setShowWelcome(false);
+      // Parse the response and update the messages state
+      const reader = response.body?.getReader();
+      if (reader) {
+        const decoder = new TextDecoder();
+        const readChunk = async () => {
+          const { done, value } = await reader.read();
+          if (done) return;
+          const chunk = decoder.decode(value);
+          try {
+            const parsedChunk = JSON.parse(chunk);
+            if (parsedChunk.output) {
+              setMessages((prevMessages) => [
+                ...prevMessages,
+                { id: Date.now().toString(), role: "assistant", content: parsedChunk.output },
+              ]);
+            }
+          } catch (e) {
+            console.error("Error parsing chunk:", e);
+          }
+          await readChunk();
+        };
+        readChunk();
+      }
+    },
+    onFinish: () => {
       router.refresh();
     },
   });
@@ -120,9 +145,11 @@ const AssistantPage: React.FC = () => {
 
   const deleteChat = async () => {
     if (!currentChatId) return;
-
+  
     try {
-      await axios.delete(`/api/chat`, { data: { chatId: currentChatId } });
+      await axios.delete(`/api/chat`, {
+        data: { chatId: currentChatId }
+      });
       setChats(chats.filter((chat) => chat.id !== currentChatId));
       if (chats.length > 1) {
         setCurrentChatId(
@@ -140,6 +167,7 @@ const AssistantPage: React.FC = () => {
       setError("Failed to delete chat. Please try again later.");
     }
   };
+  
 
   const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -154,13 +182,14 @@ const AssistantPage: React.FC = () => {
       {/* Sidebar */}
       <div
         className={cn(
-          "w-50 bg-gray-100 p-4 overflow-y-auto transition-all duration-300 ease-in-out",
-          sidebarOpen ? "block" : "hidden md:block" // Toggle visibility on mobile
+          "fixed inset-y-0 left-0 z-50 w-64 bg-gray-100 p-4 overflow-y-auto transition-transform duration-300 ease-in-out transform",
+          sidebarOpen ? "translate-x-0" : "-translate-x-full",
+          "md:relative md:translate-x-0" // Always visible on larger screens
         )}
       >
         <Button
           onClick={createNewChat}
-          className="w-auto mb-4 bg-blue-500 text-white hover:bg-blue-600"
+          className="w-full mb-4 bg-blue-500 text-white hover:bg-blue-600"
         >
           <Plus className="mr-2 h-4 w-4" /> New Chat
         </Button>
@@ -171,7 +200,10 @@ const AssistantPage: React.FC = () => {
               "p-2 rounded cursor-pointer",
               currentChatId === chat.id ? "bg-blue-100" : "hover:bg-gray-200"
             )}
-            onClick={() => setCurrentChatId(chat.id)}
+            onClick={() => {
+              setCurrentChatId(chat.id);
+              setSidebarOpen(false); // Close sidebar on mobile after selection
+            }}
           >
             {chat.title}
           </div>
@@ -180,16 +212,23 @@ const AssistantPage: React.FC = () => {
 
       {/* Toggle Sidebar Button */}
       <Button
-        onClick={() => setSidebarOpen(!sidebarOpen)}
-        className="md:hidden absolute top-4 left-4 z-10 bg-blue-500 text-white rounded-full p-2"
-      >
-        {sidebarOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
-      </Button>
+  onClick={() => setSidebarOpen(!sidebarOpen)}
+  className="md:hidden fixed top-5 left-12 z-50 flex flex-col justify-between items-center w-10 h-10 text-white p-2 rounded"
+>
+  {sidebarOpen ? (
+    <X className="h-6 w-6" />
+  ) : (
+    <>
+      <span className="block w-6 h-0.5 bg-white"></span>
+      <span className="block w-6 h-0.5 bg-white"></span>
+      <span className="block w-6 h-0.5 bg-white"></span>
+    </>
+  )}
+</Button>
+
 
       {/* Main Chat Content */}
-      <div className="flex-1 flex flex-col ml-50 md:ml-0">
-        {" "}
-        {/* Adjusted for sidebar */}
+      <div className="flex-1 flex flex-col md:ml-30"> {/* Adjusted for sidebar */}
         <div className="flex-grow overflow-hidden relative">
           {showWelcome && (
             <div className="absolute inset-0 flex items-center justify-center">
@@ -307,3 +346,4 @@ const AssistantPage: React.FC = () => {
 };
 
 export default AssistantPage;
+

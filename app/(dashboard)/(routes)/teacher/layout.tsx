@@ -13,17 +13,20 @@ const TeacherLayout = ({ children }: { children: React.ReactNode }) => {
     const fetchRole = async () => {
       try {
         const baseUrl =
-          process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"; // Fallback for local development
+          process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
         const response = await fetch(`${baseUrl}/api/check-role`, {
           method: "GET",
           headers: { "Content-Type": "application/json" },
         });
+
+        console.log("Fetch Response:", response);
 
         if (!response.ok) {
           throw new Error(`API error: ${response.statusText}`);
         }
 
         const data = await response.json();
+        console.log("Role Data:", data);
         setIsTeacher(data.isTeacher);
       } catch (error) {
         console.error("Error fetching role:", error);
@@ -62,8 +65,9 @@ const TeacherLayout = ({ children }: { children: React.ReactNode }) => {
   }
 
   if (!isTeacher) {
-    router.push("/"); // Use router.push for client-side navigation
-    return null; // Prevent rendering until navigation occurs
+    console.log("Redirecting user as they are not a teacher");
+    router.push("/");
+    return null;
   }
 
   return <>{children}</>;

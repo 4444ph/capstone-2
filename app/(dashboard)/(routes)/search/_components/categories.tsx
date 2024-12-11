@@ -10,9 +10,9 @@ interface CategoriesProps {
 }
 
 const iconMap: Record<Category["name"], IconType> = {
-    "Beginner": FcSportsMode,
-    "Amatuer": FcSportsMode,
-    "Professional": FcSportsMode,          
+    "Prelim": FcSportsMode,
+    "Midterm": FcSportsMode,
+    "Finals": FcSportsMode,          
 };
 
 export const Categories = ({

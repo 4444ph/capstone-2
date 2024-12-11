@@ -35,7 +35,7 @@ export async function PATCH(
         return new NextResponse("Chapter not found", { status: 404 });    
       }
 
-      if ( !chapter.title || !chapter.description || !chapter.videoUrl ){
+      if ( !chapter.title || !chapter.description ){
         return new NextResponse("Missing required fields", { status: 400 });
       }
 
